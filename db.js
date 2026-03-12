@@ -110,7 +110,7 @@ async function initTables() {
         shipping_fee INT DEFAULT 0 COMMENT 'Shipping charges in paise',
         cod_fee INT DEFAULT 0 COMMENT 'COD fee in paise if applicable',
         currency VARCHAR(3) DEFAULT 'INR',
-        status ENUM('created', 'paid', 'failed', 'cancelled', 'shipped', 'delivered') DEFAULT 'created',
+        status ENUM('created', 'paid', 'cod_confirmed', 'failed', 'cancelled', 'shipped', 'delivered') DEFAULT 'created',
         payment_method ENUM('razorpay', 'cod') DEFAULT 'razorpay',
         shipping_status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
         tracking_number VARCHAR(100) DEFAULT NULL,
