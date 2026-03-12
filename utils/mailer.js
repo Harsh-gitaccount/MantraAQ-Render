@@ -1,55 +1,42 @@
-import nodemailer from "nodemailer";
-
-let transporter = null;
-
-function getTransporter() {
-  if (!transporter) {
-    console.log('📧 Initializing SMTP for Render...');
-
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-      port: parseInt(process.env.SMTP_PORT || "587", 10),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      pool: true,
-      maxConnections: 2,
-      connectionTimeout: 30000,
-      socketTimeout: 45000
-    });
-  }
-  return transporter;
-}
+import fetch from "node-fetch";
 
 export async function sendMail({ to, subject, html }) {
   try {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      throw new Error('SMTP credentials missing');
+    if (!process.env.BREVO_API_KEY) {
+      throw new Error('BREVO_API_KEY missing in environment');
     }
-
-    const t = getTransporter();
 
     console.log(`📤 Sending to: ${to}`);
 
-    const result = await t.sendMail({
-      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
-      to,
-      subject,
-      html,
-      text: 'Please enable HTML or view in email client'
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'MantraAQ Store',
+          email: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com'
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html
+      })
     });
 
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || `Brevo error: ${response.status}`);
+    }
+
+    const result = await response.json();
     console.log(`✅ SENT: ${result.messageId}`);
     return result;
 
   } catch (error) {
     console.error(`❌ FAILED to ${to}:`, error.message);
-    console.error('SMTP_USER:', process.env.SMTP_USER ? 'OK' : 'MISSING');
     throw error;
   }
 }
@@ -106,5 +93,3 @@ export async function sendOrderEmail({ to, name, summary }) {
     html
   });
 }
-
-
