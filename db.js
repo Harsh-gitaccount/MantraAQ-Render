@@ -24,7 +24,7 @@ export async function getDb() {
 async function initTables() {
   const connection = await pool.getConnection();
   try {
-    // ✅ Users table
+    // Users table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +37,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ Sessions table
+    // Sessions table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS sessions (
         id VARCHAR(36) PRIMARY KEY,
@@ -50,7 +50,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ Password resets table
+    // Password resets table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS password_resets (
         token VARCHAR(64) PRIMARY KEY,
@@ -64,7 +64,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ Email verifications table
+    // Email verifications table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS email_verifications (
         token VARCHAR(64) PRIMARY KEY,
@@ -78,7 +78,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ ENHANCED: Products table with weight and volume columns
+    // Products table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS products (
         id VARCHAR(50) PRIMARY KEY,
@@ -97,14 +97,18 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ ENHANCED: Orders table with complete checkout fields
+    // Orders table — FIXED: added subtotal, shipping_fee, shipping_address_id columns
+    // and made razorpay_order_id nullable for COD orders
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS orders (
         id VARCHAR(50) PRIMARY KEY,
         user_id INT,
-        razorpay_order_id VARCHAR(50) NOT NULL,
+        razorpay_order_id VARCHAR(50) DEFAULT NULL,
         razorpay_payment_id VARCHAR(50),
-        amount INT NOT NULL COMMENT 'Amount in paise',
+        amount INT NOT NULL COMMENT 'Total amount in paise',
+        subtotal INT DEFAULT 0 COMMENT 'Products subtotal in paise',
+        shipping_fee INT DEFAULT 0 COMMENT 'Shipping charges in paise',
+        cod_fee INT DEFAULT 0 COMMENT 'COD fee in paise if applicable',
         currency VARCHAR(3) DEFAULT 'INR',
         status ENUM('created', 'paid', 'failed', 'cancelled', 'shipped', 'delivered') DEFAULT 'created',
         payment_method ENUM('razorpay', 'cod') DEFAULT 'razorpay',
@@ -115,8 +119,8 @@ async function initTables() {
         items JSON,
         customer_details JSON,
         shipping_address JSON DEFAULT NULL COMMENT 'Complete shipping address from checkout',
+        shipping_address_id INT DEFAULT NULL COMMENT 'Reference to saved shipping address',
         notes TEXT DEFAULT NULL,
-        cod_fee INT DEFAULT 0 COMMENT 'COD fee in paise if applicable',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -129,7 +133,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ NEW: Shipping addresses table for address reuse and management
+    // Shipping addresses table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS shipping_addresses (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -155,7 +159,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ NEW: Order items table for better analytics and inventory tracking
+    // Order items table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS order_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -175,7 +179,7 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ NEW: Cart table for persistent cart storage
+    // Cart items table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS cart_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -191,43 +195,33 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // ✅ MIGRATION: Add missing columns to existing orders table (if upgrading)
-    try {
-      await connection.execute(`
-        ALTER TABLE orders 
-        ADD COLUMN IF NOT EXISTS payment_method ENUM('razorpay', 'cod') DEFAULT 'razorpay',
-        ADD COLUMN IF NOT EXISTS shipping_status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
-        ADD COLUMN IF NOT EXISTS tracking_number VARCHAR(100) DEFAULT NULL,
-        ADD COLUMN IF NOT EXISTS estimated_delivery DATE DEFAULT NULL,
-        ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP NULL DEFAULT NULL,
-        ADD COLUMN IF NOT EXISTS shipping_address JSON DEFAULT NULL COMMENT 'Complete shipping address from checkout',
-        ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL,
-        ADD COLUMN IF NOT EXISTS cod_fee INT DEFAULT 0 COMMENT 'COD fee in paise if applicable'
-      `);
-      
-      // Update status enum to include shipping statuses (if upgrading)
-      await connection.execute(`
-        ALTER TABLE orders 
-        MODIFY COLUMN status ENUM('created', 'paid', 'failed', 'cancelled', 'shipped', 'delivered') DEFAULT 'created'
-      `);
-      
-    } catch (error) {
-      // Columns may already exist or table might be new
-      console.log('Orders table migration note:', error.message);
+    // Migration: Add missing columns to existing tables (safe on fresh + existing DBs)
+    const migrations = [
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal INT DEFAULT 0",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_fee INT DEFAULT 0",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address_id INT DEFAULT NULL",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method ENUM('razorpay', 'cod') DEFAULT 'razorpay'",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending'",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number VARCHAR(100) DEFAULT NULL",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS estimated_delivery DATE DEFAULT NULL",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP NULL DEFAULT NULL",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address JSON DEFAULT NULL",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL",
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS cod_fee INT DEFAULT 0",
+      "ALTER TABLE orders MODIFY COLUMN razorpay_order_id VARCHAR(50) DEFAULT NULL",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS weight VARCHAR(50) DEFAULT NULL",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS volume VARCHAR(50) DEFAULT NULL"
+    ];
+
+    for (const sql of migrations) {
+      try {
+        await connection.execute(sql);
+      } catch (e) {
+        // Column already exists or migration not needed — safe to ignore
+      }
     }
 
-    // ✅ Add weight/volume columns to existing products table (if upgrading)
-    try {
-      await connection.execute(`
-        ALTER TABLE products 
-        ADD COLUMN IF NOT EXISTS weight VARCHAR(50) DEFAULT NULL COMMENT 'Product weight (e.g., 1 kg, 500 g)',
-        ADD COLUMN IF NOT EXISTS volume VARCHAR(50) DEFAULT NULL COMMENT 'Product volume (e.g., 250 ml, 1 L)'
-      `);
-    } catch (error) {
-      console.log('Products table migration note:', error.message);
-    }
-
-    // ✅ ENHANCED: Sample products with weight and volume data
+    // Sample products (INSERT IGNORE = skip if already exists)
     await connection.execute(`
       INSERT IGNORE INTO products (id, name, description, price, image_url, stock_quantity, weight, volume) VALUES 
       ('fresh_raw_singhara', 'Fresh Raw Singhara', 'Fresh, premium water chestnuts packed with nutrients, fiber, and antioxidants. Perfect for healthy snacking and cooking.', 4500, 'assets/images/products/raw-singhara.jpg', 25, '1 kg', NULL),
@@ -236,7 +230,7 @@ async function initTables() {
       ('singhara_sweeteners', 'Singhara Sweeteners', 'Natural, diabetic-friendly sweeteners for everyday use.', 3000, 'assets/images/products/singhara-sweeteners.jpg', 20, NULL, '200 ml')
     `);
 
-    console.log('✅ Database tables initialized successfully with enhanced e-commerce schema');
+    console.log('✅ Database tables initialized successfully');
 
   } catch (error) {
     console.error('❌ Database initialization error:', error);
