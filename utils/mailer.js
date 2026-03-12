@@ -7,7 +7,7 @@ function getTransporter() {
     console.log('📧 Initializing SMTP for Render...');
 
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
       port: parseInt(process.env.SMTP_PORT || "587", 10),
       secure: false,
       auth: {
