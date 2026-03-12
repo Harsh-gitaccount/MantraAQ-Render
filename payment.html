@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Secure Payment - MantraAQ</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="/js/main.js" defer></script>
+    <script src="payment.js" defer></script>
+    <style>
+        /* Prevent horizontal scrolling */
+        body {
+            overflow-x: hidden;
+        }
+        
+        /* Ensure all containers stay within viewport */
+        * {
+            box-sizing: border-box;
+        }
+        
+        .payment-method {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .payment-method:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .payment-method.selected {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .container-mobile {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            .progress-container {
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            
+            .progress-container::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .payment-method {
+                transform: none !important;
+            }
+            
+            .payment-method:hover {
+                transform: none !important;
+            }
+            
+            .sticky-summary {
+                position: relative !important;
+            }
+        }
+        
+        /* Force responsive behavior */
+        .responsive-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .responsive-grid {
+                grid-template-columns: 2fr 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Progress Indicator -->
+    <div class="bg-white border-b shadow-sm">
+        <div class="max-w-6xl mx-auto container-mobile py-4">
+            <div class="flex items-center justify-between">
+                <div class="progress-container flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">✓</div>
+                        <span class="text-xs sm:text-sm font-medium text-green-600 whitespace-nowrap">Cart</span>
+                    </div>
+                    <div class="w-4 sm:w-8 h-px bg-green-300 flex-shrink-0"></div>
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">✓</div>
+                        <span class="text-xs sm:text-sm font-medium text-green-600 whitespace-nowrap">Address</span>
+                    </div>
+                    <div class="w-4 sm:w-8 h-px bg-green-300 flex-shrink-0"></div>
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">3</div>
+                        <span class="text-xs sm:text-sm font-medium text-blue-600 whitespace-nowrap">Payment</span>
+                    </div>
+                </div>
+                <a href="shipping.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm ml-4 flex-shrink-0">← Back</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto container-mobile py-4 sm:py-8">
+        <div class="responsive-grid">
+            <!-- Payment Options -->
+            <div class="space-y-4 sm:space-y-6">
+                
+                <!-- Delivery Address Review -->
+                <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900">📍 Delivery Address</h2>
+                        <a href="shipping.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</a>
+                    </div>
+                    <div id="shipping-address-display" class="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                        <div class="animate-pulse">
+                            <div class="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                            <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 fade-in">
+                    <h2 class="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-gray-900">💳 Payment Method</h2>
+                    
+                    <div class="space-y-3 sm:space-y-4">
+                        <!-- Razorpay (Credit/Debit/UPI/Net Banking) -->
+                        <div class="payment-method border-2 border-gray-200 rounded-lg p-3 sm:p-4 selected" data-method="razorpay">
+                            <div class="flex items-start sm:items-center">
+                                <input type="radio" name="payment-method" value="razorpay" checked 
+                                       class="mt-1 sm:mt-0 mr-3 sm:mr-4 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0">
+                                        <span class="text-base sm:text-lg font-semibold text-gray-900">💳 Online Payment</span>
+                                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium self-start">Recommended</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Credit Card, Debit Card, UPI, Net Banking, Wallets</p>
+                                    <div class="flex items-center space-x-2 mt-2">
+                                        <span class="text-xs text-gray-500">Visa, Mastercard, UPI, Wallets</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cash on Delivery -->
+                        <div class="payment-method border-2 border-gray-200 rounded-lg p-3 sm:p-4" data-method="cod">
+                            <div class="flex items-start sm:items-center">
+                                <input type="radio" name="payment-method" value="cod" 
+                                       class="mt-1 sm:mt-0 mr-3 sm:mr-4 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0">
+                                        <span class="text-base sm:text-lg font-semibold text-gray-900">🚚 Cash on Delivery</span>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium self-start">₹9.99 Extra</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Pay when your order arrives at your doorstep</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Badge -->
+                    <div class="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-green-600">🔒</span>
+                            <span class="text-sm font-medium text-green-800">Your payment information is secure and encrypted</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Place Order Button -->
+                <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+                    <button id="place-order-btn" 
+                            style="
+                                background: linear-gradient(to right, #059669, #047857) !important;
+                                color: white !important;
+                                border: 2px solid #10b981 !important;
+                                border-radius: 8px !important;
+                                padding: 16px 24px !important;
+                                font-size: 16px !important;
+                                font-weight: bold !important;
+                                width: 100% !important;
+                                display: block !important;
+                                position: relative !important;
+                                z-index: 999 !important;
+                                cursor: pointer !important;
+                                box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
+                                transition: all 0.2s ease !important;
+                                min-height: 50px !important;
+                            "
+                            class="w-full text-white py-4 px-6 rounded-lg font-bold">
+                        <span id="place-order-text" style="color: white !important; font-weight: bold !important;">
+                            🔒 Place Order Securely
+                        </span>
+                    </button>
+                    
+                    <div class="flex flex-col sm:flex-row items-center justify-center sm:space-x-4 space-y-2 sm:space-y-0 mt-4 text-sm text-gray-500">
+                        <div class="flex items-center space-x-1">
+                            <span>🔒</span>
+                            <span class="whitespace-nowrap">256-bit SSL Encrypted</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span>🛡️</span>
+                            <span class="whitespace-nowrap">100% Secure Payment</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 sticky-summary lg:sticky lg:top-4 fade-in">
+                    <h3 class="text-lg sm:text-xl font-bold mb-4 text-gray-900">📋 Order Summary</h3>
+                    
+                    <!-- Order Items -->
+                    <div id="order-items" class="space-y-3 mb-4">
+                        <div class="animate-pulse space-y-3">
+                            <div class="h-12 bg-gray-200 rounded"></div>
+                            <div class="h-12 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Price Breakdown -->
+<div class="border-t pt-4 space-y-2">
+    <div class="flex justify-between text-gray-600">
+        <span>Subtotal</span>
+        <span id="subtotal">₹0.00</span>
+    </div>
+    <div class="flex justify-between text-gray-600">
+        <span>Shipping</span>
+        <span id="shipping-display" class="text-green-600 font-medium">FREE</span>
+    </div>
+    <div class="flex justify-between text-gray-600" id="cod-fee-row" style="display: none;">
+        <span>COD Fee</span>
+        <span id="cod-fee">₹49.00</span>
+    </div>
+    <div class="flex justify-between text-gray-600">
+        <span>Taxes</span>
+        <span class="text-green-600 font-medium">Included</span>
+    </div>
+    <div class="border-t pt-2 mt-2">
+        <div class="flex justify-between text-lg sm:text-xl font-bold">
+            <span class="text-gray-900">Total</span>
+            <span id="total-amount" class="text-green-600">₹0.00</span>
+        </div>
+    </div>
+</div>
+
+                    
+                    <!-- Savings Badge -->
+                    <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-green-600">💰</span>
+                            <span class="text-sm font-medium text-green-800">You're saving on shipping!</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Return Policy -->
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-blue-600">🔄</span>
+                            <span class="text-sm text-blue-800">7-day return policy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
+

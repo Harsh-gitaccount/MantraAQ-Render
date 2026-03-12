@@ -1,3 +1,73 @@
+/* Remove ALL borders, shadows, and outlines from logo */
+.w-10 img,
+.w-12 img,
+.w-10.h-10 img,
+.w-12.h-12 img,
+.sm\:w-12 img {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Remove borders/shadows from logo containers */
+.w-10.h-10,
+.w-12.h-12,
+.sm\:w-12.sm\:h-12 {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Enhanced logo sizing - 30% smaller + no borders */
+.w-10.h-10,
+.w-12.h-12 {
+    width: 84px !important;   /* 30% smaller */
+    height: 42px !important;  /* 30% smaller */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.w-10.h-10 img,
+.w-12.h-12 img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Mobile responsive - also remove borders */
+@media (max-width: 768px) {
+    .w-10.h-10,
+    .w-12.h-12 {
+        width: 56px !important;
+        height: 28px !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+}
+
+/* Remove any TailwindCSS default borders that might apply */
+.rounded-lg {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+
+
 /* ========================================
    CLEAN RESET - NO SCROLLBARS ISSUES
 ========================================= */
@@ -594,5 +664,407 @@ nav {
     .footer-powered,
     .footer-links {
         margin-bottom: 0.5rem;
+    }
+}
+
+/* New auth and payment features style */
+
+/* Add these modal and utility styles to your existing styles.css */
+
+/* Modal styles */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}
+
+/* Loading states */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Cart animations */
+.cart-item {
+    transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Toast animations */
+.toast-enter {
+    transform: translateX(100%);
+}
+
+.toast-enter-active {
+    transform: translateX(0);
+    transition: transform 300ms ease-out;
+}
+
+.toast-exit {
+    transform: translateX(0);
+}
+
+.toast-exit-active {
+    transform: translateX(100%);
+    transition: transform 300ms ease-in;
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+    .modal > div {
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* Form focus states */
+input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button hover effects */
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+/* Product grid responsive */
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+
+/* Cart page specific styles */
+.cart-item {
+    transition: all 0.2s ease;
+}
+
+.cart-item:hover {
+    background-color: #f9fafb;
+}
+
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-input {
+    -moz-appearance: textfield;
+}
+
+/* Sticky sidebar */
+.sticky {
+    position: sticky;
+    top: 1rem;
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Enhanced Verification Banner - Combines your styles with desktop fixes */
+#verification-banner, 
+.verification-banner-responsive {
+    display: block !important;
+    position: relative;
+    z-index: 40;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+    border: 1px solid #f59e0b;
+    animation: slideDown 0.3s ease-out;
+    cursor: pointer; /* Makes it clear it's clickable */
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Desktop specific styling - Enhanced */
+@media (min-width: 768px) {
+    #verification-banner, 
+    .verification-banner-responsive {
+        position: sticky;
+        top: 0;
+        margin-bottom: 1rem;
+        border-left: 4px solid #f59e0b; /* Add left border on desktop too */
+        padding: 16px; /* Ensure adequate padding */
+    }
+}
+
+/* Mobile specific styling - Keep your existing mobile styles */
+@media (max-width: 767px) {
+    #verification-banner, 
+    .verification-banner-responsive {
+        border-left: none;
+        border-top: 4px solid #fbbf24;
+        padding: 12px;
+    }
+    
+    #verification-banner .flex, 
+    .verification-banner-responsive .flex {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    #verification-banner .flex-shrink-0:last-child, 
+    .verification-banner-responsive .flex-shrink-0:last-child {
+        align-self: stretch;
+    }
+    
+    #verification-banner button, 
+    .verification-banner-responsive button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Hover effect for better UX */
+#verification-banner:hover, 
+.verification-banner-responsive:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #facc15 100%) !important;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+/* Verification Modal Styling */
+#verification-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#verification-modal > div {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Button styling within verification banner */
+#verification-banner button, 
+.verification-banner-responsive button {
+    transition: all 0.2s ease;
+}
+
+#verification-banner button:hover, 
+.verification-banner-responsive button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== ENHANCED STABLE CART STYLING ===== */
+
+/* Base cart container - prevent layout shifts */
+#cart-items-list {
+    min-height: 100px;
+    transition: all 0.2s ease;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Base cart item styling - consistent across all screen sizes */
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    min-height: 100px;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+}
+
+.cart-item:hover {
+    background-color: #f9fafb;
+}
+
+/* Uniform cart images - ENFORCED STABILITY */
+.cart-item img,
+#cart-items-list img,
+.flex-shrink-0 img {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+/* Image containers - STABLE DIMENSIONS */
+.cart-item .flex-shrink-0,
+.cart-item .w-20.h-20 {
+    width: 80px !important;
+    height: 80px !important;
+    min-width: 80px !important;
+    min-height: 80px !important;
+    flex-shrink: 0 !important;
+}
+
+/* RESPONSIVE DESIGN WITH STABILITY */
+
+/* Only change layout at clear breakpoints */
+@media (max-width: 768px) {
+    .cart-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .cart-item img,
+    #cart-items-list img,
+    .cart-item .flex-shrink-0,
+    .cart-item .w-20.h-20 {
+        width: 100px !important;
+        height: 100px !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+    }
+    
+    .cart-item h3,
+    .cart-item .font-bold {
+        text-align: center;
+        max-width: none;
+    }
+}
+
+/* Small mobile - clear distinct breakpoint */
+@media (max-width: 480px) {
+    .cart-item img,
+    #cart-items-list img,
+    .cart-item .flex-shrink-0,
+    .cart-item .w-20.h-20 {
+        width: 80px !important;
+        height: 80px !important;
+        min-width: 80px !important;
+        min-height: 80px !important;
+    }
+    
+    .cart-item {
+        padding: 1rem;
+    }
+}
+
+/* Prevent layout shifts during transitions */
+.lg\:flex-row {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+    .lg\:flex-row {
+        flex-direction: row !important;
+    }
+}
+
+.lg\:w-2\/3 {
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .lg\:w-2\/3 {
+        width: 66.666667% !important;
+    }
+}
+
+.lg\:w-1\/3 {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .lg\:w-1\/3 {
+        width: 33.333333% !important;
+        margin-top: 0;
+    }
+}
+
+/* Force stability on critical elements */
+#cart-loading,
+#cart-empty,
+#cart-items-container {
+    transition: opacity 0.2s ease;
+}
+
+/* Text handling with cross-browser support */
+.cart-item h3,
+.cart-item .font-bold {
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    overflow: hidden;
+    line-height: 1.3;
+    max-height: 2.6em;
+}
+
+@supports not (-webkit-line-clamp: 2) {
+    .cart-item h3,
+    .cart-item .font-bold {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 200px;
+        max-height: 1.3em;
     }
 }

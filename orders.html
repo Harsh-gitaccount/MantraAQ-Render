@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - MantraAQ</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="/js/main.js" defer></script>
+    <script src="frontend-orders.js" defer></script>
+    
+    <style>
+        /* ✅ Modern Order Card Styles */
+        .order-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #d1d5db;
+        }
+        
+        .order-card.expanded {
+            transform: none;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        /* ✅ Status Badges */
+        .status-badge {
+            font-weight: 600;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-paid { background: #dcfce7; color: #166534; }
+        .status-paid::before { content: '✅'; }
+        
+        .status-cod_confirmed { background: #fef3c7; color: #92400e; }
+        .status-cod_confirmed::before { content: '💰'; }
+        
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-processing::before { content: '⏳'; }
+        
+        .status-shipped { background: #f3e8ff; color: #7c3aed; }
+        .status-shipped::before { content: '🚚'; }
+        
+        .status-delivered { background: #dcfce7; color: #166534; }
+        .status-delivered::before { content: '✅'; }
+        
+        .status-cancelled { background: #fee2e2; color: #dc2626; }
+        .status-cancelled::before { content: '❌'; }
+        
+        /* ✅ Expandable Details */
+        .order-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .order-details.expanded {
+            max-height: 1000px;
+        }
+        
+        /* ✅ Product Items */
+        .product-item {
+            transition: all 0.2s ease;
+            border-radius: 12px;
+        }
+        
+        .product-item:hover {
+            background: #f8fafc;
+            transform: translateX(4px);
+        }
+        
+        /* ✅ Product Image Styles */
+        .product-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        }
+        
+        .product-image-placeholder {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        /* ✅ Action Buttons */
+        .action-btn {
+            transition: all 0.2s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+            color: #374151;
+            border-color: #9ca3af;
+        }
+        
+        /* ✅ Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .printable-order, .printable-order * {
+                visibility: visible;
+            }
+            
+            .printable-order {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        /* ✅ Loading States */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* ✅ Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 16px;
+            }
+            
+            .order-meta {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .order-actions {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .action-btn {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+        
+        /* ✅ Smooth Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- ✅ Updated Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="flex items-center space-x-3 group">
+                        <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <span class="text-white font-bold text-sm">M</span>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900">MantraAQ</span>
+                    </a>
+                    <div class="hidden sm:block text-gray-300">|</div>
+                    <h1 class="hidden sm:block text-lg font-semibold text-gray-900">My Orders</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- ✅ Changed to "Back" -->
+                    <a href="/" class="text-gray-600 hover:text-gray-900 font-medium transition-colors group">
+                        <span class="mr-2 group-hover:-translate-x-1 transition-transform inline-block">←</span>
+                        Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ✅ Main Content (same as before) -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="mb-4 sm:mb-0">
+                    <h1 class="text-3xl font-bold text-gray-900 sm:hidden mb-2">My Orders</h1>
+                    <p class="text-gray-600">Track and manage your orders</p>
+                    <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                        <span id="orders-count">Loading...</span>
+                        <span>•</span>
+                        <span id="last-updated">Just now</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <!-- Filter Dropdown -->
+                    <div class="relative">
+                        <select id="order-filter" class="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                            <option value="all">All Orders</option>
+                            <option value="paid">Completed</option>
+                            <option value="cod_confirmed">COD Orders</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Refresh Button -->
+                    <button id="refresh-btn" class="action-btn btn-primary px-4 py-2 rounded-lg">
+                        <span class="text-sm">🔄</span>
+                        <span class="hidden sm:inline">Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl border p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="space-y-3 flex-1">
+                        <div class="loading-shimmer h-6 w-48"></div>
+                        <div class="loading-shimmer h-4 w-32"></div>
+                        <div class="loading-shimmer h-4 w-64"></div>
+                    </div>
+                    <div class="loading-shimmer h-8 w-24"></div>
+                </div>
+                <div class="loading-shimmer h-10 w-full"></div>
+            </div>
+            <div class="bg-white rounded-xl border p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="space-y-3 flex-1">
+                        <div class="loading-shimmer h-6 w-48"></div>
+                        <div class="loading-shimmer h-4 w-32"></div>
+                        <div class="loading-shimmer h-4 w-64"></div>
+                    </div>
+                    <div class="loading-shimmer h-8 w-24"></div>
+                </div>
+                <div class="loading-shimmer h-10 w-full"></div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="bg-white rounded-xl border p-12 text-center hidden">
+            <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <span class="text-4xl">📦</span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Orders Found</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">You haven't placed any orders yet. Start shopping to see your orders here.</p>
+            <a href="/" class="action-btn btn-primary px-8 py-3 rounded-lg">
+                🛍️ Start Shopping
+            </a>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="bg-red-50 border border-red-200 rounded-xl p-8 text-center hidden">
+            <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <span class="text-2xl">⚠️</span>
+            </div>
+            <h3 class="text-lg font-semibold text-red-900 mb-2">Unable to Load Orders</h3>
+            <p class="text-red-700 mb-6">Please check your connection and try again.</p>
+            <button id="retry-btn" class="action-btn btn-primary px-6 py-3 rounded-lg">
+                Try Again
+            </button>
+        </div>
+
+        <!-- Orders Container -->
+        <div id="orders-container" class="space-y-4">
+            <!-- Orders will be populated here -->
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Toasts will appear here -->
+    </div>
+
+    <!-- ✅ Hidden Print Template -->
+    <div id="print-template" class="hidden">
+        <!-- Print content will be generated here -->
+    </div>
+</body>
+</html>
+
+

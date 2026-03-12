@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Address - MantraAQ</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="/js/main.js" defer></script>
+    <script src="shipping.js" defer></script>
+
+    <style>
+        .error-border {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+        }
+        
+        .success-border {
+            border-color: #059669 !important;
+            background-color: #f0fdf4 !important;
+        }
+        
+        .form-error {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .required::after {
+            content: "*";
+            color: #dc2626;
+            margin-left: 4px;
+        }
+
+        #address-suggestions {
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* ✅ IMPROVED: Mobile-First Saved Addresses */
+        .saved-address-card {
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            padding: 16px;
+            border-radius: 12px;
+            background: white;
+        }
+        
+        .saved-address-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .saved-address-card.selected {
+            border-color: #059669;
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+            box-shadow: 0 6px 25px rgba(5, 150, 105, 0.25);
+            transform: translateY(-3px);
+        }
+        
+        .default-badge {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            color: white;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        .address-type-badge {
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        /* ✅ IMPROVED: Mobile-Friendly Select Button */
+        .select-btn {
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .select-btn:hover {
+            background: linear-gradient(45deg, #2563eb, #1d4ed8);
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        .selected .select-btn {
+            background: linear-gradient(45deg, #059669, #047857);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+        }
+        
+        /* ✅ IMPROVED: Mobile Layout */
+        @media (max-width: 768px) {
+            .saved-address-card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .address-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
+            
+            .address-meta {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start !important;
+            }
+            
+            .select-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                min-height: 44px;
+            }
+            
+            .address-badges {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        
+        /* Progress indicator mobile fix */
+        @media (max-width: 640px) {
+            .progress-text {
+                font-size: 11px !important;
+                white-space: nowrap;
+            }
+            
+            .progress-step {
+                width: 24px !important;
+                height: 24px !important;
+                font-size: 10px !important;
+            }
+            
+            .progress-line {
+                width: 20px !important;
+            }
+        }
+        
+        /* Add these 2 rules to your existing <style> section */
+.saved-address-card.selected {
+    border-color: #059669 !important;
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    box-shadow: 0 4px 20px rgba(5, 150, 105, 0.25);
+    transform: translateY(-2px);
+}
+
+.selected .select-btn {
+    background: linear-gradient(45deg, #059669, #047857) !important;
+    box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+}
+
+        /* Button styling */
+        #continue-payment-btn {
+            display: block !important;
+            position: relative !important;
+            z-index: 9999 !important;
+            background: linear-gradient(to right, #059669, #047857) !important;
+            color: white !important;
+            border: 2px solid #10b981 !important;
+            border-radius: 0.5rem !important;
+            padding: 1rem 1.5rem !important;
+            font-size: 1.125rem !important;
+            font-weight: 600 !important;
+            width: 100% !important;
+            min-height: 60px !important;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        #continue-payment-btn:hover {
+            background: linear-gradient(to right, #047857, #065f46) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4) !important;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            #continue-payment-btn {
+                position: fixed !important;
+                bottom: 20px !important;
+                left: 20px !important;
+                right: 20px !important;
+                width: calc(100% - 40px) !important;
+                z-index: 9999 !important;
+            }
+            
+            body {
+                padding-bottom: 100px !important;
+            }
+        }
+        
+        /* Loading state */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* ✅ NEW: Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 350px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success { background: linear-gradient(45deg, #059669, #047857); }
+        .toast.error { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+        .toast.warning { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .toast.info { background: linear-gradient(45deg, #3b82f6, #2563eb); }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Progress Indicator -->
+    <div class="bg-white border-b shadow-sm">
+        <div class="max-w-6xl mx-auto px-2 sm:px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div class="progress-step w-6 h-6 sm:w-8 sm:h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">✓</div>
+                        <span class="progress-text text-xs sm:text-sm font-medium text-green-600">Cart</span>
+                    </div>
+                    <div class="progress-line w-8 sm:w-12 h-px bg-green-300 flex-shrink-0"></div>
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div class="progress-step w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">2</div>
+                        <span class="progress-text text-xs sm:text-sm font-medium text-blue-600">Address</span>
+                    </div>
+                    <div class="progress-line w-8 sm:w-12 h-px bg-gray-300 flex-shrink-0"></div>
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                        <div class="progress-step w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">3</div>
+                        <span class="progress-text text-xs sm:text-sm text-gray-500">Payment</span>
+                    </div>
+                </div>
+                <a href="cart.html" class="text-blue-600 hover:text-blue-800 font-medium text-sm">← Back</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Delivery Address Form -->
+            <div class="lg:col-span-2">
+                <!-- ✅ IMPROVED: Saved Addresses Section -->
+                <div id="saved-addresses-section" class="bg-white rounded-xl shadow-sm border p-6 mb-6 hidden">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                            <span class="mr-3 text-2xl">📍</span>
+                            <span>Your Saved Addresses</span>
+                        </h3>
+                        <span id="addresses-count" class="text-sm px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full font-semibold"></span>
+                    </div>
+                    
+                    <!-- Loading state -->
+                    <div id="addresses-loading" class="space-y-4 hidden">
+                        <div class="loading-shimmer h-24 rounded-lg"></div>
+                        <div class="loading-shimmer h-24 rounded-lg"></div>
+                    </div>
+                    
+                    <!-- Addresses container -->
+                    <div id="saved-addresses-container" class="space-y-4"></div>
+                    
+                    <!-- Add new address button -->
+                    <div class="text-center mt-6 pt-6 border-t border-gray-200">
+                        <button id="add-new-address-btn" 
+                                class="inline-flex items-center px-6 py-3 text-blue-600 hover:text-blue-800 hover:bg-blue-50 font-semibold text-sm rounded-lg transition-all border-2 border-blue-200 hover:border-blue-300">
+                            <span class="mr-2 text-lg">➕</span>
+                            Add New Address
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Address Form -->
+                <div class="bg-white rounded-xl shadow-sm border p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Delivery Address</h2>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="save-address-toggle" 
+                                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="save-address-toggle" class="text-sm font-medium text-gray-700 cursor-pointer">
+                                Save this address
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <form id="shipping-form" class="space-y-6">
+                        <!-- Personal Information -->
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">Full Name</label>
+                                <input type="text" id="full-name" placeholder="Enter your full name" required 
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="full-name-error">Please enter your name</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">Mobile Number</label>
+                                <input type="tel" id="mobile" placeholder="10-digit mobile number" required maxlength="10"
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="mobile-error">Please enter a valid 10-digit mobile number</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alternative Mobile Number</label>
+                            <input type="tel" id="alt-mobile" placeholder="10-digit alternative number (optional)" maxlength="10"
+                                   class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <div class="form-error" id="alt-mobile-error">Please enter a valid 10-digit mobile number</div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">Flat/House No/Building</label>
+                                <input type="text" id="flat-no" placeholder="e.g., Flat 101, Building Name" required 
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="flat-no-error">Please enter flat/house number</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">Street Address</label>
+                                <input type="text" id="street" placeholder="Area, Street Name, Locality" required 
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="street-error">Please enter street address</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 required">Address Type</label>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <input type="radio" name="address-type" value="Home" required class="mr-3 text-blue-600">
+                                    <span class="font-medium">🏠 Home</span>
+                                </label>
+                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <input type="radio" name="address-type" value="Work" required class="mr-3 text-blue-600">
+                                    <span class="font-medium">🏢 Work</span>
+                                </label>
+                                <label class="flex items-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <input type="radio" name="address-type" value="Other" required class="mr-3 text-blue-600">
+                                    <span class="font-medium">📍 Other</span>
+                                </label>
+                            </div>
+                            <div class="form-error" id="address-type-error">Please select address type</div>
+                        </div>
+
+                        <!-- Location Information -->
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">PIN Code</label>
+                                <input type="text" id="pincode" placeholder="6-digit PIN code" required maxlength="6"
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="pincode-error">Please enter a valid PIN code</div>
+                                <div class="text-xs text-gray-500 mt-1">📍 City & state will auto-fill</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">State</label>
+                                <input type="text" id="state" placeholder="Enter your state" required
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="state-error">State is required</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2 required">City</label>
+                                <input type="text" id="city" placeholder="Enter your city" required
+                                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="form-error" id="city-error">City is required</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                            <select id="country" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <option value="India">🇮🇳 India</option>
+                                <option value="Other">🌍 Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Continue to Payment Button -->
+                        <div class="pt-6 border-t border-gray-200">
+                            <button type="submit" id="continue-payment-btn" 
+                                    class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-4 px-6 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span id="continue-text">🔒 Continue to Secure Payment</span>
+                            </button>
+                            <p class="text-center text-sm text-gray-500 mt-3">
+                                <span class="inline-flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    Your information is secure and encrypted
+                                </span>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border p-6 sticky top-4">
+                    <h3 class="text-xl font-bold mb-4 text-gray-900 flex items-center">
+                        <span class="mr-2">🛒</span>
+                        Order Summary
+                    </h3>
+                    <div id="shipping-items" class="space-y-3 mb-4"></div>
+                    <div class="border-t pt-4 mt-4">
+    <div class="flex justify-between text-xl font-bold">
+        <span class="text-gray-900">Total Amount</span>
+        <span id="shipping-total" class="text-blue-600">₹0.00</span>
+    </div>
+    <p id="shipping-info" class="text-sm text-gray-500 mt-2 flex items-center">
+        <span class="mr-1">✅</span>
+        <span id="shipping-text">Including all taxes • FREE delivery</span>
+    </p>
+</div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

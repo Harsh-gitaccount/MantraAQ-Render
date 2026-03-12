@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed - MantraAQ</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    
+    <!-- Prevent back button to payment page -->
+    <script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center">
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg overflow-hidden">
+                        <img src="assets/images/logo.png" alt="MantraAQ Logo" class="w-full h-full object-contain">
+                    </div>
+                    <span class="text-xl font-bold text-gray-900">MantraAQ</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Success Content -->
+    <main class="max-w-2xl mx-auto px-4 py-8">
+        <!-- Success Icon & Message -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+            <p class="text-gray-600" id="success-message">Your order has been successfully placed.</p>
+        </div>
+
+        <!-- Order Details Card -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Order Details</h2>
+                    <span id="payment-method-badge" class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">
+                        Cash on Delivery
+                    </span>
+                </div>
+                
+                <!-- Order Info Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Order ID</p>
+                        <p class="font-mono text-sm font-semibold text-gray-900" id="order-id">#ORD123456</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Order Date</p>
+                        <p class="text-sm font-medium text-gray-900" id="order-date">Dec 16, 2024</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Total Amount</p>
+                        <p class="text-lg font-bold text-green-600" id="total-amount">₹1,299.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Items</p>
+                        <p class="text-sm font-medium text-gray-900" id="item-count">3 items</p>
+                    </div>
+                </div>
+
+                <!-- Payment Method Info -->
+                <div id="payment-info" class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700" id="payment-details">
+                            Pay ₹1,299.00 in cash when your order arrives
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="border-t border-gray-200 pt-4">
+                    <h3 class="font-medium text-gray-900 mb-2">What's Next?</h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                            <span>Order confirmation email sent to your registered email</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                            <span>We'll pack and ship your order within 1-2 business days</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>
+                            <span>Track your order status in your account</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+       <div class="flex flex-col sm:flex-row gap-4">
+    <button id="continue-shopping-btn" 
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-center">
+        <span class="flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l1.5 6m0 0h8M10 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z"></path>
+            </svg>
+            <span>Continue Shopping</span>
+        </span>
+    </button>
+    
+    <button id="view-orders-btn" 
+            class="flex-1 bg-white hover:bg-gray-50 text-gray-900 font-semibold py-3 px-6 rounded-lg border border-gray-300 transition-colors duration-200 text-center">
+        <span class="flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span>View My Orders</span>
+        </span>
+    </button>
+</div>
+
+
+        <!-- Support Info -->
+        <div class="mt-8 text-center">
+            <p class="text-sm text-gray-500 mb-2">Need help with your order?</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <a href="mailto:support@mantraaq.com" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    📧 support@mantraaq.com
+                </a>
+                <a href="tel:+919876543210" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    📞 +91 98765 43210
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-4xl mx-auto px-4 py-8 text-center">
+            <p class="text-gray-500 text-sm">&copy; 2024 MantraAQ. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="order-success.js"></script>
+</body>
+</html>
