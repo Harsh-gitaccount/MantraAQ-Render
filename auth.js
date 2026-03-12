@@ -95,38 +95,37 @@ router.post("/register", authLimiter, async (req, res, next) => {
     
     console.log('✅ Verification token created');
     
-    // Try to send email (but don't let it break registration)
-    try {
-      console.log('📧 Attempting to send verification email...');
-      const link = `${process.env.APP_BASE_URL}/api/auth/verify-email?token=${token}`;
-      await sendMail({
-        to: email,
-        subject: "Verify your email - MantraAQ",
-        html: `
-          <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
-            <h2>Welcome to MantraAQ!</h2>
-            <p>Hi ${name},</p>
-            <p>Please verify your email address to complete your registration:</p>
-            <div style="text-align:center; margin:30px 0;">
-              <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Verify Email</a>
-            </div>
-            <p>This link is valid for 24 hours.</p>
-            <p>If you didn't create this account, please ignore this email.</p>
-          </div>
-        `
-      });
-      console.log('✅ Verification email sent successfully');
-    } catch (emailError) {
-      // Email failed but don't break registration
-      console.error('⚠️ Email sending failed:', emailError.message);
-      console.log('🔍 Continuing with registration despite email failure...');
-    }
-    
-    // Always send success response
+    // Send success response IMMEDIATELY (don't wait for email)
     console.log('✅ Sending success response');
-    return res.status(201).json({ 
+    res.status(201).json({ 
       message: "Account created! Please check your email to verify your account." 
     });
+    
+    // Fire-and-forget: send email in background AFTER response
+    const link = `${process.env.APP_BASE_URL}/api/auth/verify-email?token=${token}`;
+    console.log('📧 Sending verification email in background...');
+    sendMail({
+      to: email,
+      subject: "Verify your email - MantraAQ",
+      html: `
+        <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
+          <h2>Welcome to MantraAQ!</h2>
+          <p>Hi ${name},</p>
+          <p>Please verify your email address to complete your registration:</p>
+          <div style="text-align:center; margin:30px 0;">
+            <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Verify Email</a>
+          </div>
+          <p>This link is valid for 24 hours.</p>
+          <p>If you didn't create this account, please ignore this email.</p>
+        </div>
+      `
+    }).then(() => {
+      console.log('✅ Verification email sent successfully');
+    }).catch(emailError => {
+      console.error('⚠️ Email sending failed:', emailError.message);
+    });
+    
+    return;
     
   } catch (error) {
     console.error('🔥 Registration error:', error.message);
@@ -306,31 +305,28 @@ router.post("/resend-verification", authLimiter, async (req, res) => {
       [token, userId, expires]
     );
     
-    // Try to send email (don't break if email fails)
-    try {
-      const link = `${process.env.APP_BASE_URL}/api/auth/verify-email?token=${token}`;
-      await sendMail({
-        to: user.email,
-        subject: "Verify your email - MantraAQ",
-        html: `
-          <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
-            <h2>Email Verification</h2>
-            <p>Hi ${user.name},</p>
-            <p>Please verify your email address by clicking the button below:</p>
-            <div style="text-align:center; margin:30px 0;">
-              <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Verify Email</a>
-            </div>
-            <p>This link is valid for 24 hours.</p>
-            <p>If you didn't request this, please ignore this email.</p>
-          </div>
-        `
-      });
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      // Still return success to prevent enumeration
-    }
-    
+    // Send response immediately
     res.json({ message: "Verification email sent! Please check your inbox." });
+    
+    // Fire-and-forget: send email in background
+    const link = `${process.env.APP_BASE_URL}/api/auth/verify-email?token=${token}`;
+    sendMail({
+      to: user.email,
+      subject: "Verify your email - MantraAQ",
+      html: `
+        <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
+          <h2>Email Verification</h2>
+          <p>Hi ${user.name},</p>
+          <p>Please verify your email address by clicking the button below:</p>
+          <div style="text-align:center; margin:30px 0;">
+            <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Verify Email</a>
+          </div>
+          <p>This link is valid for 24 hours.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+        </div>
+      `
+    }).then(() => console.log('✅ Resend verification email sent'))
+      .catch(err => console.error('⚠️ Resend verification email failed:', err.message));
     
   } catch (error) {
     console.error('Resend verification error:', error);
@@ -360,31 +356,28 @@ router.post("/password/forgot", authLimiter, async (req, res) => {
         [token, user.id, expires]
       );
       
-      try {
-        const link = `${process.env.APP_BASE_URL}/reset-password?token=${token}`;
-        await sendMail({
-          to: email,
-          subject: "Reset your password - MantraAQ",
-          html: `
-            <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
-              <h2>Password Reset Request</h2>
-              <p>Hi ${user.name},</p>
-              <p>You requested to reset your password. Click the button below to create a new password:</p>
-              <div style="text-align:center; margin:30px 0;">
-                <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Reset Password</a>
-              </div>
-              <p>This link will expire in 15 minutes for security reasons.</p>
-              <p>If you didn't request this, please ignore this email.</p>
+      // Fire-and-forget: send email in background
+      const link = `${process.env.APP_BASE_URL}/reset-password?token=${token}`;
+      sendMail({
+        to: email,
+        subject: "Reset your password - MantraAQ",
+        html: `
+          <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
+            <h2>Password Reset Request</h2>
+            <p>Hi ${user.name},</p>
+            <p>You requested to reset your password. Click the button below to create a new password:</p>
+            <div style="text-align:center; margin:30px 0;">
+              <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Reset Password</a>
             </div>
-          `
-        });
-        console.log('✅ Password reset email sent to:', email);
-      } catch (emailError) {
-        console.error('⚠️ Password reset email failed:', emailError.message);
-      }
+            <p>This link will expire in 15 minutes for security reasons.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+          </div>
+        `
+      }).then(() => console.log('✅ Password reset email sent to:', email))
+        .catch(err => console.error('⚠️ Password reset email failed:', err.message));
     }
     
-    // Always same response to prevent email enumeration
+    // Always same response (sent immediately)
     res.json({ 
       message: "If an account with that email exists, we've sent password reset instructions." 
     });
