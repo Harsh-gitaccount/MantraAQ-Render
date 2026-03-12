@@ -7,17 +7,24 @@ function getTransporter() {
   if (!transporter) {
     console.log('📧 Creating SMTP transporter:', process.env.SMTP_HOST, process.env.SMTP_USER);
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      pool: true,
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: parseInt(process.env.SMTP_PORT || "465", 10),
-      secure: process.env.SMTP_PORT == "465" || !process.env.SMTP_PORT, // true for 465, false for 587
+      secure: true, // Auto-use SMTPS for Gmail
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       },
+      tls: {
+        // Do not fail on invalid certs in cloud environments
+        rejectUnauthorized: false
+      },
       // Timeout settings to prevent hanging
       connectionTimeout: 10000,
       greetingTimeout: 10000,
-      socketTimeout: 15000
+      socketTimeout: 15000,
+      maxConnections: 5,
+      maxMessages: 100
     });
   }
   return transporter;
