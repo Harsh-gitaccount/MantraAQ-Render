@@ -22,11 +22,11 @@ import { getDb } from "./db.js";
 import { sendOrderEmail } from "./utils/mailer.js";
 import authRouter from "./auth.js";
 
-app.set('trust proxy', 1);
+
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
+app.set('trust proxy', 1);
 // ✅ FIXED: Security middleware with Razorpay CSP permissions
 app.use(helmet({
   contentSecurityPolicy: {
