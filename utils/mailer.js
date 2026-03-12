@@ -1,30 +1,27 @@
 import nodemailer from "nodemailer";
 
-// Lazy-init transporter so that env vars are loaded first
 let transporter = null;
 
 function getTransporter() {
   if (!transporter) {
-    console.log('📧 Creating SMTP transporter:', process.env.SMTP_HOST, process.env.SMTP_USER);
-    transporter = nodemailer.createTransport({
-      pool: true,
+    console.log('📧 Initializing SMTP for Render...');
+
+    transporter = nodemailer.createTransporter({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: parseInt(process.env.SMTP_PORT || "465", 10),
-      secure: true, // Auto-use SMTPS for Gmail
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       },
       tls: {
-        // Do not fail on invalid certs in cloud environments
         rejectUnauthorized: false
       },
-      // Timeout settings to prevent hanging
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      maxConnections: 5,
-      maxMessages: 100
+      pool: true,
+      maxConnections: 2,
+      connectionTimeout: 30000,
+      socketTimeout: 45000,
+      logger: process.env.NODE_ENV === 'development'
     });
   }
   return transporter;
@@ -32,26 +29,35 @@ function getTransporter() {
 
 export async function sendMail({ to, subject, html }) {
   try {
-    const t = getTransporter();
-    const result = await t.sendMail({
-      from: process.env.FROM_EMAIL,
+    // Must have env vars
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      throw new Error('SMTP credentials missing');
+    }
+
+    const transporter = getTransporter();
+
+    console.log(`📤 Sending to: ${to}`);
+
+    const result = await transporter.sendMail({
+      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
       to,
       subject,
-      html
+      html,
+      text: 'Please enable HTML or view in email client'
     });
-    console.log('✅ Email sent successfully to:', to, 'MessageId:', result.messageId);
+
+    console.log(`✅ SENT: ${result.messageId}`);
     return result;
+
   } catch (error) {
-    console.error('❌ Email sending failed to:', to);
-    console.error('   Error:', error.message);
-    console.error('   SMTP Host:', process.env.SMTP_HOST);
-    console.error('   SMTP User:', process.env.SMTP_USER);
+    console.error(`❌ FAILED to ${to}:`, error.message);
+    console.error('SMTP_USER:', process.env.SMTP_USER ? 'OK' : 'MISSING');
     throw error;
   }
 }
 
 export async function sendOrderEmail({ to, name, summary }) {
-  const inr = (paisa) => `₹${(paisa/100).toFixed(2)} ${summary.currency}`;
+  const inr = (paisa) => `₹${(paisa / 100).toFixed(2)} ${summary.currency}`;
   const html = `
     <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
       <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
@@ -75,12 +81,11 @@ export async function sendOrderEmail({ to, name, summary }) {
       <p>We'll notify you when your order ships. Thank you for choosing MantraAQ!</p>
       
       <div style="border-top:1px solid #ddd; padding-top:20px; margin-top:30px; text-align:center; color:#666; font-size:14px;">
-        <p>MantraAQ Team<br>
-        If you have questions, reply to this email or contact support.</p>
+        <p>MantraAQ Team<br>If you have questions, reply to this email or contact support.</p>
       </div>
     </div>
   `;
-  
+
   await sendMail({
     to,
     subject: `Order Confirmed: ${summary.orderId}`,
