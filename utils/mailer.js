@@ -1,25 +1,44 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587", 10),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+// Lazy-init transporter so that env vars are loaded first
+let transporter = null;
+
+function getTransporter() {
+  if (!transporter) {
+    console.log('📧 Creating SMTP transporter:', process.env.SMTP_HOST, process.env.SMTP_USER);
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "587", 10),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      },
+      // Timeout settings to prevent hanging
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
+    });
   }
-});
+  return transporter;
+}
 
 export async function sendMail({ to, subject, html }) {
   try {
-    await transporter.sendMail({
+    const t = getTransporter();
+    const result = await t.sendMail({
       from: process.env.FROM_EMAIL,
       to,
       subject,
       html
     });
+    console.log('✅ Email sent successfully to:', to, 'MessageId:', result.messageId);
+    return result;
   } catch (error) {
-    console.error('Email sending failed:', error);
+    console.error('❌ Email sending failed to:', to);
+    console.error('   Error:', error.message);
+    console.error('   SMTP Host:', process.env.SMTP_HOST);
+    console.error('   SMTP User:', process.env.SMTP_USER);
     throw error;
   }
 }
@@ -61,4 +80,3 @@ export async function sendOrderEmail({ to, name, summary }) {
     html
   });
 }
-

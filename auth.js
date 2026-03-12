@@ -360,23 +360,28 @@ router.post("/password/forgot", authLimiter, async (req, res) => {
         [token, user.id, expires]
       );
       
-      const link = `${process.env.APP_BASE_URL}/reset-password?token=${token}`;
-      await sendMail({
-        to: email,
-        subject: "Reset your password - MantraAQ",
-        html: `
-          <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
-            <h2>Password Reset Request</h2>
-            <p>Hi ${user.name},</p>
-            <p>You requested to reset your password. Click the button below to create a new password:</p>
-            <div style="text-align:center; margin:30px 0;">
-              <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Reset Password</a>
+      try {
+        const link = `${process.env.APP_BASE_URL}/reset-password?token=${token}`;
+        await sendMail({
+          to: email,
+          subject: "Reset your password - MantraAQ",
+          html: `
+            <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
+              <h2>Password Reset Request</h2>
+              <p>Hi ${user.name},</p>
+              <p>You requested to reset your password. Click the button below to create a new password:</p>
+              <div style="text-align:center; margin:30px 0;">
+                <a href="${link}" style="background:#3b82f6; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; display:inline-block;">Reset Password</a>
+              </div>
+              <p>This link will expire in 15 minutes for security reasons.</p>
+              <p>If you didn't request this, please ignore this email.</p>
             </div>
-            <p>This link will expire in 15 minutes for security reasons.</p>
-            <p>If you didn't request this, please ignore this email.</p>
-          </div>
-        `
-      });
+          `
+        });
+        console.log('✅ Password reset email sent to:', email);
+      } catch (emailError) {
+        console.error('⚠️ Password reset email failed:', emailError.message);
+      }
     }
     
     // Always same response to prevent email enumeration
