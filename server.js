@@ -22,6 +22,7 @@ import { getDb } from "./db.js";
 import { sendOrderEmail } from "./utils/mailer.js";
 import authRouter from "./auth.js";
 
+app.set('trust proxy', 1);
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,18 +33,18 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: [
-        "'self'", 
-        "'unsafe-inline'", 
+        "'self'",
+        "'unsafe-inline'",
         "https://fonts.googleapis.com",
         "https://checkout-static-next.razorpay.com"
       ],
       fontSrc: [
-        "'self'", 
+        "'self'",
         "https://fonts.gstatic.com",
         "https://checkout-static-next.razorpay.com"
       ],
       scriptSrc: [
-        "'self'", 
+        "'self'",
         "https://checkout.razorpay.com",
         "'unsafe-inline'"
       ],
@@ -54,8 +55,8 @@ app.use(helmet({
         "https://checkout.razorpay.com"
       ],
       imgSrc: [
-        "'self'", 
-        "data:", 
+        "'self'",
+        "data:",
         "https:",
         "https://checkout-static-next.razorpay.com"
       ],
@@ -109,27 +110,27 @@ app.get("/api/address-search", async (req, res) => {
     }
 
     const cacheKey = `addr_${query.trim().toLowerCase()}`;
-    
+
     if (addressCache.has(cacheKey)) {
       return res.json(addressCache.get(cacheKey));
     }
 
     const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=3&countrycodes=in&q=${encodeURIComponent(query)}`;
-    
+
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'MantraAQ/1.0 (mantraaqsuperfoods@gmail.com)'
       }
     });
-    
+
     if (!response.ok) {
       throw new Error(`Nominatim API returned ${response.status}`);
     }
-    
+
     const data = await response.json();
     addressCache.set(cacheKey, data);
     setTimeout(() => addressCache.delete(cacheKey), 3600000);
-    
+
     res.json(data);
   } catch (error) {
     console.error('Address search error:', error);
@@ -140,28 +141,28 @@ app.get("/api/address-search", async (req, res) => {
 app.get("/api/pincode/:pin", async (req, res) => {
   try {
     const pin = req.params.pin;
-    
+
     if (!/^\d{6}$/.test(pin)) {
       return res.status(400).json({ error: 'PIN code must be exactly 6 digits' });
     }
 
     const cacheKey = `pin_${pin}`;
-    
+
     if (addressCache.has(cacheKey)) {
       return res.json(addressCache.get(cacheKey));
     }
 
     const url = `https://api.postalpincode.in/pincode/${pin}`;
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`Pincode API returned ${response.status}`);
     }
-    
+
     const data = await response.json();
     addressCache.set(cacheKey, data);
     setTimeout(() => addressCache.delete(cacheKey), 86400000);
-    
+
     res.json(data);
   } catch (error) {
     console.error('PIN code lookup error:', error);
@@ -201,10 +202,10 @@ app.post("/webhooks/razorpay", async (req, res) => {
       console.error('❌ RAZORPAY_WEBHOOK_SECRET not configured');
       return res.status(500).send("Webhook secret not configured");
     }
-    
+
     const signature = req.header("x-razorpay-signature");
     const body = req.body; // This is raw buffer from bodyParser.raw()
-    
+
     // ✅ FIXED: Use raw body directly for signature verification
     const expected = crypto
       .createHmac("sha256", secret)
@@ -221,7 +222,7 @@ app.post("/webhooks/razorpay", async (req, res) => {
     // ✅ FIXED: Parse raw body to get event data
     const event = JSON.parse(body.toString());
     console.log(`📧 Webhook received: ${event.event}`);
-    
+
     if (event.event === "payment.captured" || event.event === "order.paid") {
       const payload = event.payload;
       const payment = payload?.payment?.entity;
@@ -236,14 +237,14 @@ app.post("/webhooks/razorpay", async (req, res) => {
 
       // ✅ This should work now with proper body parsing
       const result = await processSuccessfulPayment(payment, order);
-      
+
       if (result.success) {
         console.log(`✅ Order processed successfully: ${result.orderId}`);
-        
+
         // Send confirmation email
         const customerEmail = order?.notes?.customer_email;
         const customerName = order?.notes?.customer_name || "Customer";
-        
+
         if (customerEmail) {
           try {
             await sendOrderEmail({
@@ -263,12 +264,12 @@ app.post("/webhooks/razorpay", async (req, res) => {
             console.error('📧 Email sending failed:', emailError);
           }
         }
-        
+
       } else {
         console.error(`❌ Order processing failed: ${result.error}`);
       }
     }
-    
+
     res.status(200).send("ok");
   } catch (e) {
     console.error('🔥 Webhook error:', e);
@@ -281,9 +282,9 @@ app.post("/webhooks/razorpay", async (req, res) => {
 app.use((err, req, res, next) => {
   console.error('🔥 Unhandled server error:', err.message);
   console.error('Stack:', err.stack);
-  
+
   const isDev = process.env.NODE_ENV === 'development';
-  
+
   if (!res.headersSent) {
     res.status(500).json({
       error: 'Internal Server Error',
