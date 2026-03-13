@@ -209,6 +209,7 @@ async function initTables() {
       "ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL",
       "ALTER TABLE orders ADD COLUMN IF NOT EXISTS cod_fee INT DEFAULT 0",
       "ALTER TABLE orders MODIFY COLUMN razorpay_order_id VARCHAR(50) DEFAULT NULL",
+      "ALTER TABLE orders MODIFY COLUMN status ENUM('created', 'paid', 'cod_confirmed', 'failed', 'cancelled', 'shipped', 'delivered') DEFAULT 'created'",
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS weight VARCHAR(50) DEFAULT NULL",
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS volume VARCHAR(50) DEFAULT NULL"
     ];

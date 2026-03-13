@@ -434,45 +434,70 @@ function calculateTotals() {
     }
     
     // ✅ NEW: Handle successful Razorpay payment
-   function handleRazorpaySuccess(response) {
-    console.log('🎉 Razorpay payment completed successfully');
+   async function handleRazorpaySuccess(response) {
+    console.log('🎉 Razorpay payment completed locally, verifying with server...');
     
-    // Store payment details for success page
-    localStorage.setItem('last-order', JSON.stringify({
-        method: 'razorpay',
-        paymentId: response.razorpay_payment_id,
-        orderId: response.razorpay_order_id,
-        signature: response.razorpay_signature,
-        timestamp: Date.now(),
-        amount: totalAmount,
-        items: checkoutCart.length
-    }));
-    
-    // Clear cart and shipping data
-    localStorage.removeItem('checkout-cart');
-    localStorage.removeItem('shipping-data');
-    localStorage.removeItem('mantraaq-cart');
-
-    // Clear main cart UI if function exists
-    if (typeof clearCartData === 'function') {
-        clearCartData();
-    } else if (typeof updateCartCount === 'function') {
-        updateCartCount();
-    }
-    
-    // Track successful payment
-    if (typeof gtag !== 'undefined') {
-        gtag('event', 'purchase', {
-            transaction_id: response.razorpay_order_id,
-            value: totalAmount,
-            currency: 'INR',
-            payment_method: 'razorpay'
+    try {
+        // ✅ NEW: Synchronously verify payment with backend to ensure DB is updated
+        const verifyRes = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+            })
         });
+        
+        const verifyData = await verifyRes.json();
+        
+        if (!verifyRes.ok || !verifyData.success) {
+            throw new Error(verifyData.error || 'Payment verification failed');
+        }
+        
+        console.log('✅ Payment verified and recorded on server:', verifyData.orderId);
+        
+        // Store payment details for success page
+        localStorage.setItem('last-order', JSON.stringify({
+            method: 'razorpay',
+            paymentId: response.razorpay_payment_id,
+            orderId: response.razorpay_order_id,
+            signature: response.razorpay_signature,
+            timestamp: Date.now(),
+            amount: totalAmount,
+            items: checkoutCart.length
+        }));
+        
+        // Clear cart and shipping data
+        localStorage.removeItem('checkout-cart');
+        localStorage.removeItem('shipping-data');
+        localStorage.removeItem('mantraaq-cart');
+
+        // Clear main cart UI if function exists
+        if (typeof clearCartData === 'function') {
+            clearCartData();
+        } else if (typeof updateCartCount === 'function') {
+            updateCartCount();
+        }
+        
+        // Track successful payment
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'purchase', {
+                transaction_id: response.razorpay_order_id,
+                value: totalAmount,
+                currency: 'INR',
+                payment_method: 'razorpay'
+            });
+        }
+        
+        // ✅ PROFESSIONAL: Immediate redirect to success page
+        console.log('Redirecting to order success page...');
+        window.location.href = 'order-success.html';
+        
+    } catch (error) {
+        console.error('🔥 Payment verification error:', error);
+        showError('Payment Verification Failed', 'Your payment was taken, but order creation failed. Please contact support with your payment ID.');
     }
-    
-    // ✅ PROFESSIONAL: Immediate redirect to success page
-    console.log('Redirecting to order success page...');
-    window.location.href = 'order-success.html';
 }
 
 function handleCODSuccess(orderDetails) {

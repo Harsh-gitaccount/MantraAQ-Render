@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
+import crypto from "crypto";
 import { getDb } from "./db.js";
 import Razorpay from "razorpay";
 
@@ -232,6 +233,48 @@ export async function processSuccessfulPayment(paymentData, orderData) {
     return { success: false, error: error.message };
   }
 }
+// ✅ Verify payment from frontend directly (fail-safe if webhook is missing/delayed)
+router.post("/verify-payment", async (req, res) => {
+  try {
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, paymentMethod, items, customer } = req.body;
+    
+    // 1. Verify Signature
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest("hex");
+      
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, error: "Invalid payment signature" });
+    }
+    
+    // 2. See if order already exists (maybe webhook processed it already)
+    const db = await getDb();
+    const [existing] = await db.execute("SELECT id FROM orders WHERE razorpay_order_id = ?", [razorpay_order_id]);
+    if (existing.length > 0) {
+      console.log(`✅ Order ${existing[0].id} already processed (likely via webhook)`);
+      return res.json({ success: true, orderId: existing[0].id });
+    }
+    
+    // 3. Fetch Razorpay Order and Payment for processSuccessfulPayment
+    const razorpayOrder = await razorpay.orders.fetch(razorpay_order_id);
+    const razorpayPayment = await razorpay.payments.fetch(razorpay_payment_id);
+    
+    // 4. Process Payment
+    console.log(`🔍 Processing synchronous payment verification for: ${razorpay_order_id}`);
+    const result = await processSuccessfulPayment(razorpayPayment, razorpayOrder);
+    
+    if (result.success) {
+      res.json({ success: true, orderId: result.orderId });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    console.error("🔥 Payment verification failed:", error);
+    res.status(500).json({ success: false, error: "Payment verification failed" });
+  }
+});
 
 // ✅ Create order with shipping address handling
 router.post("/create-order", async (req, res) => {
