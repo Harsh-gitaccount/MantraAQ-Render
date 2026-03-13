@@ -4,6 +4,7 @@ dotenv.config();
 import express from "express";
 import crypto from "crypto";
 import { getDb } from "./db.js";
+import { sendOrderEmail } from "./utils/mailer.js";
 import Razorpay from "razorpay";
 
 const router = express.Router();
@@ -218,6 +219,25 @@ export async function processSuccessfulPayment(paymentData, orderData) {
       await connection.query("COMMIT");
       
       console.log(`✅ Razorpay payment processed: ${receipt}, address: ${shippingAddressId}`);
+      
+      // ✅ Send order confirmation email (fire and forget)
+      const customerEmail = customerData.email || orderData.notes.customer_email;
+      const customerName = customerData.fullName || customerData.name || orderData.notes.customer_name || "Customer";
+      
+      if (customerEmail) {
+        sendOrderEmail({
+          to: customerEmail,
+          name: customerName,
+          summary: {
+            orderId: receipt,
+            paymentId: paymentData.id,
+            amount: orderData.amount, // in paise
+            currency: orderData.currency || "INR",
+            method: paymentMethod || "razorpay",
+            status: "Success"
+          }
+        }).catch(err => console.error("📧 Order email failed:", err));
+      }
       
       return { success: true, orderId: receipt };
       
@@ -514,6 +534,22 @@ if (paymentMethod === 'cod') {
     await connection.query("COMMIT");
     
     console.log(`✅ COD Order created: ${receipt}, amount: ₹${orderTotal.total/100}, address: ${shippingAddressId}`);
+    
+    // ✅ Send order confirmation email (fire and forget)
+    if (customer.email) {
+      sendOrderEmail({
+        to: customer.email,
+        name: customer.name || "Customer",
+        summary: {
+          orderId: `cod_${receipt}`,
+          paymentId: "Cash On Delivery",
+          amount: orderTotal.total,
+          currency: "INR",
+          method: "cod",
+          status: "Pending (COD)"
+        }
+      }).catch(err => console.error("📧 COD email failed:", err));
+    }
     
     res.json({
       orderId: `cod_${receipt}`,

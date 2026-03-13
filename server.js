@@ -19,7 +19,6 @@ import fetch from 'node-fetch';
 import path from "path";
 import { fileURLToPath } from "url";
 import { getDb } from "./db.js";
-import { sendOrderEmail } from "./utils/mailer.js";
 import authRouter from "./auth.js";
 
 
@@ -240,31 +239,6 @@ app.post("/webhooks/razorpay", async (req, res) => {
 
       if (result.success) {
         console.log(`✅ Order processed successfully: ${result.orderId}`);
-
-        // Send confirmation email
-        const customerEmail = order?.notes?.customer_email;
-        const customerName = order?.notes?.customer_name || "Customer";
-
-        if (customerEmail) {
-          try {
-            await sendOrderEmail({
-              to: customerEmail,
-              name: customerName,
-              summary: {
-                orderId: result.orderId,
-                paymentId: payment.id,
-                amount: order.amount,
-                currency: order.currency || "INR",
-                method: payment.method,
-                status: payment.status
-              }
-            });
-            console.log(`📧 Order confirmation email sent to ${customerEmail}`);
-          } catch (emailError) {
-            console.error('📧 Email sending failed:', emailError);
-          }
-        }
-
       } else {
         console.error(`❌ Order processing failed: ${result.error}`);
       }

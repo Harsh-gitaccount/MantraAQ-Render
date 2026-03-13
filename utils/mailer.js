@@ -21,6 +21,7 @@ export async function sendMail({ to, subject, html }) {
           email: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com'
         },
         to: [{ email: to }],
+        bcc: [{ email: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com' }],
         subject,
         htmlContent: html
       })
