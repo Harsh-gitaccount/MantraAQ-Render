@@ -201,27 +201,129 @@ function handleMobileOrdersClick() {
     window.location.href = 'orders.html';
 }
 
-// ✅ ENHANCED: Premium profile display with better formatting
+// ✅ ENHANCED: Professional Tailwind Profile Modal
 function showUserProfile() {
-    if (currentUser) {
-        const memberSince = new Date(currentUser.created_at).toLocaleDateString('en-IN', {
-            year: 'numeric',
-            month: 'long', 
-            day: 'numeric'
-        });
-        
-        const profileDetails = `🏆 PREMIUM MEMBER PROFILE
+    if (!currentUser) return;
 
-👤 Name: ${currentUser.name}
-📧 Email: ${currentUser.email}
-📅 Member Since: ${memberSince}
-🎯 Status: Active Premium Member
-
-✨ Profile management features coming soon!
-🚀 Thank you for being a valued member!`;
+    let profileModal = document.getElementById('profile-modal');
+    
+    // Create the modal if it doesn't exist in the DOM
+    if (!profileModal) {
+        profileModal = document.createElement('div');
+        profileModal.id = 'profile-modal';
+        profileModal.className = 'fixed inset-0 z-[100] hidden items-center justify-center';
         
-        alert(profileDetails);
+        // Inner HTML for the modal
+        profileModal.innerHTML = `
+            <!-- Backdrop -->
+            <div id="profile-modal-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0"></div>
+            
+            <!-- Modal Content -->
+            <div id="profile-modal-content" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
+                <!-- Header -->
+                <div class="relative h-24 bg-gradient-to-r from-gray-800 to-gray-900">
+                    <button id="close-profile-btn" class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors bg-black/20 hover:bg-black/40 rounded-full p-1.5 backdrop-blur-md z-10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <!-- Decorative patterns -->
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
+                </div>
+                
+                <!-- Profile Info -->
+                <div class="px-8 pb-8 flex flex-col items-center">
+                    <!-- Avatar -->
+                    <div class="relative -mt-12 mb-4">
+                        <div class="w-24 h-24 bg-blue-600 rounded-full shadow-lg border-4 border-white flex items-center justify-center text-3xl font-bold text-white uppercase" id="profile-avatar-initial">
+                            U
+                        </div>
+                        <div id="profile-verified-badge" class="absolute bottom-0 right-0 hidden bg-blue-500 text-white rounded-full p-1.5 border-2 border-white shadow-sm" title="Verified Account">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                        </div>
+                    </div>
+                    
+                    <h3 id="profile-modal-name" class="text-2xl font-bold text-gray-900 mb-1">User Name</h3>
+                    <p id="profile-modal-email" class="text-gray-500 mb-6 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        user@example.com
+                    </p>
+                    
+                    <!-- Details Card -->
+                    <div class="w-full bg-gray-50 rounded-xl p-5 mb-6 border border-gray-100 shadow-inner">
+                        <div class="flex flex-col gap-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-500">Status</span>
+                                <span id="profile-modal-status" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-800">
+                                    Unverified
+                                </span>
+                            </div>
+                            <div class="h-px bg-gray-200 w-full"></div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-500">Member Since</span>
+                                <span id="profile-modal-date" class="text-sm font-semibold text-gray-800">Date</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(profileModal);
+        
+        // Event Listeners for closing
+        const closeProfileModal = () => {
+            const backdrop = document.getElementById('profile-modal-backdrop');
+            const content = document.getElementById('profile-modal-content');
+            
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                profileModal.classList.remove('flex');
+                profileModal.classList.add('hidden');
+            }, 300);
+        };
+        
+        document.getElementById('close-profile-btn').addEventListener('click', closeProfileModal);
+        document.getElementById('profile-modal-backdrop').addEventListener('click', closeProfileModal);
     }
+
+    // Populate data
+    const memberSince = new Date(currentUser.created_at).toLocaleDateString('en-IN', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+    
+    document.getElementById('profile-avatar-initial').textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
+    document.getElementById('profile-modal-name').textContent = currentUser.name;
+    document.getElementById('profile-modal-email').textContent = currentUser.email;
+    document.getElementById('profile-modal-date').textContent = memberSince;
+    
+    // Status Logic
+    const statusBadge = document.getElementById('profile-modal-status');
+    const verifiedBadge = document.getElementById('profile-verified-badge');
+    
+    if (currentUser.email_verified) {
+        statusBadge.textContent = 'Verified Member';
+        statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200';
+        verifiedBadge.classList.remove('hidden');
+    } else {
+        statusBadge.textContent = 'Unverified';
+        statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-800 border border-gray-300';
+        verifiedBadge.classList.add('hidden');
+    }
+
+    // Show modal with animation
+    profileModal.classList.remove('hidden');
+    profileModal.classList.add('flex');
+    
+    // Trigger reflow for animations
+    void profileModal.offsetWidth;
+    
+    document.getElementById('profile-modal-backdrop').classList.remove('opacity-0');
+    document.getElementById('profile-modal-backdrop').classList.add('opacity-100');
+    
+    document.getElementById('profile-modal-content').classList.remove('scale-95', 'opacity-0');
+    document.getElementById('profile-modal-content').classList.add('scale-100', 'opacity-100');
 }
 
 // ✅ KEEP: Your updateUserDisplay function is perfect as-is
