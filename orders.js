@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import crypto from "crypto";
 import { getDb } from "./db.js";
-import { sendOrderEmail } from "./utils/mailer.js";
+import { sendOrderEmail, sendAdminOrderNotification } from "./utils/mailer.js";
 import Razorpay from "razorpay";
 
 const router = express.Router();
@@ -224,20 +224,30 @@ export async function processSuccessfulPayment(paymentData, orderData) {
       const customerEmail = customerData.email || orderData.notes.customer_email;
       const customerName = customerData.fullName || customerData.name || orderData.notes.customer_name || "Customer";
       
+      const orderSummary = {
+        orderId: receipt,
+        paymentId: paymentData.id,
+        amount: orderData.amount, // in paise
+        currency: orderData.currency || "INR",
+        method: paymentMethod || "razorpay",
+        status: "Success"
+      };
+
       if (customerEmail) {
         sendOrderEmail({
           to: customerEmail,
           name: customerName,
-          summary: {
-            orderId: receipt,
-            paymentId: paymentData.id,
-            amount: orderData.amount, // in paise
-            currency: orderData.currency || "INR",
-            method: paymentMethod || "razorpay",
-            status: "Success"
-          }
-        }).catch(err => console.error("📧 Order email failed:", err));
+          summary: orderSummary
+        }).catch(err => console.error("📧 Customer order email failed:", err));
       }
+
+      // ✅ Send admin notification
+      sendAdminOrderNotification({
+        adminEmail: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com',
+        customerName: customerName,
+        customerEmail: customerEmail || 'N/A',
+        summary: orderSummary
+      }).catch(err => console.error("📧 Admin order email failed:", err));
       
       return { success: true, orderId: receipt };
       
@@ -536,20 +546,30 @@ if (paymentMethod === 'cod') {
     console.log(`✅ COD Order created: ${receipt}, amount: ₹${orderTotal.total/100}, address: ${shippingAddressId}`);
     
     // ✅ Send order confirmation email (fire and forget)
+    const orderSummary = {
+      orderId: `cod_${receipt}`,
+      paymentId: "Cash On Delivery",
+      amount: orderTotal.total,
+      currency: "INR",
+      method: "cod",
+      status: "Pending (COD)"
+    };
+
     if (customer.email) {
       sendOrderEmail({
         to: customer.email,
         name: customer.name || "Customer",
-        summary: {
-          orderId: `cod_${receipt}`,
-          paymentId: "Cash On Delivery",
-          amount: orderTotal.total,
-          currency: "INR",
-          method: "cod",
-          status: "Pending (COD)"
-        }
-      }).catch(err => console.error("📧 COD email failed:", err));
+        summary: orderSummary
+      }).catch(err => console.error("📧 Customer COD email failed:", err));
     }
+
+    // ✅ Send admin notification
+    sendAdminOrderNotification({
+      adminEmail: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com',
+      customerName: customer.name || "Customer",
+      customerEmail: customer.email || 'N/A',
+      summary: orderSummary
+    }).catch(err => console.error("📧 Admin COD email failed:", err));
     
     res.json({
       orderId: `cod_${receipt}`,

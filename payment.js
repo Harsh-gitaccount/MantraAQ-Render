@@ -437,6 +437,12 @@ function calculateTotals() {
    async function handleRazorpaySuccess(response) {
     console.log('🎉 Razorpay payment completed locally, verifying with server...');
     
+    // ✅ NEW: Provide immediate UI feedback so user knows order is processing
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    const placeOrderText = document.getElementById('place-order-text');
+    if (placeOrderBtn) placeOrderBtn.disabled = true;
+    if (placeOrderText) placeOrderText.innerHTML = '<span class="loading-spinner"></span> Finalizing Order...';
+    
     try {
         // ✅ NEW: Synchronously verify payment with backend to ensure DB is updated
         const verifyRes = await fetch('/api/verify-payment', {

@@ -21,7 +21,6 @@ export async function sendMail({ to, subject, html }) {
           email: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com'
         },
         to: [{ email: to }],
-        bcc: [{ email: process.env.FROM_EMAIL || 'mantraaqsuperfoods@gmail.com' }],
         subject,
         htmlContent: html
       })
@@ -43,7 +42,7 @@ export async function sendMail({ to, subject, html }) {
 }
 
 export async function sendOrderEmail({ to, name, summary }) {
-  const inr = (paisa) => `₹${(paisa / 100).toFixed(2)} ${summary.currency}`;
+  const inr = (paisa) => `₹${(paisa / 100).toFixed(2)}`;
   const html = `
     <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
       <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
@@ -91,6 +90,50 @@ export async function sendOrderEmail({ to, name, summary }) {
   await sendMail({
     to,
     subject: `Order Confirmed: ${summary.orderId}`,
+    html
+  });
+}
+
+// ✅ NEW: Admin Notification Email
+export async function sendAdminOrderNotification({ adminEmail, customerName, customerEmail, summary }) {
+  const inr = (paisa) => `₹${(paisa / 100).toFixed(2)}`;
+  const html = `
+    <div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;">
+      <div style="background:#1e3a8a; color:white; padding:20px; border-radius:8px; margin-bottom:20px;">
+        <h2 style="margin:0;">New Order Received! 🚀</h2>
+      </div>
+
+      <p>Awesome! A new order has just been placed on MantraAQ.</p>
+
+      <div style="background:#f8f9fa; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin:20px 0;">
+        <h3 style="margin-top:0; color:#1f2937;">Customer Details</h3>
+        <p style="margin:5px 0;"><strong>Name:</strong> ${customerName}</p>
+        <p style="margin:5px 0;"><strong>Email:</strong> ${customerEmail}</p>
+
+        <h3 style="margin-top:20px; color:#1f2937;">Order Details</h3>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="padding:8px 0; border-bottom:1px solid #e5e7eb;"><strong>Order ID:</strong></td>
+            <td style="padding:8px 0; border-bottom:1px solid #e5e7eb;">${summary.orderId}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0; border-bottom:1px solid #e5e7eb;"><strong>Payment Method:</strong></td>
+            <td style="padding:8px 0; border-bottom:1px solid #e5e7eb; text-transform:uppercase;">${summary.method}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;"><strong>Total Revenue:</strong></td>
+            <td style="padding:8px 0; color:#059669; font-weight:bold; font-size:18px;">${inr(summary.amount)}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <p style="color:#4b5563; font-size:14px;">Log in to the database or admin dashboard to process this order.</p>
+    </div>
+  `;
+
+  await sendMail({
+    to: adminEmail,
+    subject: `🎉 Action Required: New Order ${summary.orderId} from ${customerName}`,
     html
   });
 }
