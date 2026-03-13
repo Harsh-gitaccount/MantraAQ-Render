@@ -485,11 +485,11 @@ function setupEventListeners() {
         }
         
         // Verification modal handlers
-        else if (event.target.matches('[data-action="open-verification-modal"]')) {
+        else if (event.target.matches('[data-action="open-verification-modal"]') || event.target.closest('[data-action="open-verification-modal"]')) {
             event.preventDefault();
             openVerificationModal();
         }
-        else if (event.target.matches('[data-action="close-verification-modal"]')) {
+        else if (event.target.matches('[data-action="close-verification-modal"]') || event.target.closest('[data-action="close-verification-modal"]')) {
             event.preventDefault();
             const modal = document.getElementById('verification-modal');
             if (modal) {
@@ -500,6 +500,13 @@ function setupEventListeners() {
                     }
                 }, 200);
             }
+        }
+        else if (event.target.matches('[data-action="dismiss-verification-banner"]') || event.target.closest('[data-action="dismiss-verification-banner"]')) {
+            event.preventDefault();
+            event.stopPropagation(); // prevent modal from opening
+            sessionStorage.setItem('verification_dismissed', 'true');
+            const banner = document.getElementById('verification-banner');
+            if (banner) banner.remove();
         }
         
         // Modal auth switch buttons
@@ -524,11 +531,7 @@ function setupEventListeners() {
             }
         }
         
-        // Make entire verification banner clickable (excluding buttons)
-        else if (event.target.closest('#verification-banner') && !event.target.matches('button')) {
-            event.preventDefault();
-            openVerificationModal();
-        }
+        // Make entire verification banner clickable (excluding buttons) handled by delegation
     });
     
     // Handle direct input changes on cart quantity inputs
@@ -556,49 +559,44 @@ function showVerificationStatus(isVerified) {
     const existingBanner = document.getElementById('verification-banner');
     if (existingBanner) existingBanner.remove();
     
-    if (!isVerified) {
-        const banner = document.createElement('div');
-        banner.id = 'verification-banner';
-        banner.className = 'verification-banner-responsive bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 cursor-pointer hover:bg-yellow-100 transition-colors';
-        banner.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-yellow-700">
-                            <strong>📧 Important: Please verify your email</strong> to secure your account and receive updates.
-                            <span class="hidden sm:inline ml-1">Click here for verification options.</span>
-                        </p>
-                    </div>
+    // Check if dismissed or already verified
+    if (isVerified || sessionStorage.getItem('verification_dismissed') === 'true') {
+        return;
+    }
+    
+    const banner = document.createElement('div');
+    banner.id = 'verification-banner';
+    banner.className = 'verification-banner-responsive bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 transition-colors';
+    banner.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div class="flex items-center cursor-pointer flex-grow" data-action="open-verification-modal">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
                 </div>
-                <div class="flex-shrink-0 flex gap-2">
-                    <button data-action="resend-verification" 
-                            class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1 rounded text-sm font-medium transition-colors">
-                        Resend Email
-                    </button>
-                    <button data-action="open-verification-modal" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
-                        Verify Now
-                    </button>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <strong>📧 Important: Please verify your email</strong> to secure your account and receive updates.
+                    </p>
                 </div>
             </div>
-        `;
-        
-        // Insert at top of page content
-        const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
-        mainContent.insertBefore(banner, mainContent.firstChild);
-        
-        // Add click handler to entire banner
-        banner.addEventListener('click', function(e) {
-            if (!e.target.matches('button')) {
-                openVerificationModal();
-            }
-        });
-    }
+            <div class="flex-shrink-0 flex items-center gap-2">
+                <button data-action="resend-verification" 
+                        class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1 rounded text-sm font-medium transition-colors">
+                    Resend Email
+                </button>
+                <button data-action="dismiss-verification-banner" 
+                        class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded hover:bg-yellow-200 focus:outline-none transition-colors" title="Dismiss">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Insert at top of page content
+    const mainContent = document.querySelector('main') || document.querySelector('.container') || document.body;
+    mainContent.insertBefore(banner, mainContent.firstChild);
 }
 // Open verification modal with detailed instructions
 function openVerificationModal() {
@@ -676,13 +674,19 @@ function openVerificationModal() {
 }
 
 // Enhanced resend verification with better feedback
+let isResending = false;
 async function resendVerification() {
-    const button = event.target;
-    const originalText = button.textContent;
+    if (isResending) return;
+    isResending = true;
+    
+    const elementsToDisable = document.querySelectorAll('[data-action="resend-verification"]');
+    const originalTexts = Array.from(elementsToDisable).map(btn => btn.textContent);
     
     try {
-        button.disabled = true;
-        button.textContent = '⏳ Sending...';
+        elementsToDisable.forEach(btn => {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+        });
         
         await api("/auth/resend-verification", { method: "POST" });
         
@@ -694,25 +698,31 @@ async function resendVerification() {
             document.body.removeChild(modal);
         }
         
-        // Show countdown timer
+        // Show countdown timer on banner
         let countdown = 60;
-        button.textContent = `📧 Email Sent (${countdown}s)`;
+        elementsToDisable.forEach(btn => btn.textContent = `📧 Sent (${countdown}s)`);
         
         const timer = setInterval(() => {
             countdown--;
             if (countdown > 0) {
-                button.textContent = `📧 Email Sent (${countdown}s)`;
+                elementsToDisable.forEach(btn => btn.textContent = `📧 Sent (${countdown}s)`);
             } else {
                 clearInterval(timer);
-                button.textContent = originalText;
-                button.disabled = false;
+                elementsToDisable.forEach((btn, index) => {
+                    btn.textContent = originalTexts[index];
+                    btn.disabled = false;
+                });
+                isResending = false;
             }
         }, 1000);
         
     } catch (error) {
         showToast("❌ Failed to send verification email. Please try again.", "error");
-        button.textContent = originalText;
-        button.disabled = false;
+        elementsToDisable.forEach((btn, index) => {
+            btn.textContent = originalTexts[index];
+            btn.disabled = false;
+        });
+        isResending = false;
     }
 }
 
@@ -1971,46 +1981,7 @@ if (currentUser) {
     }
 });
 
-// ✅ STREAMLINED: Verification modal handlers
-document.addEventListener('click', function(event) {
-    // Open verification modal
-    if (event.target.matches('[data-action="open-verification-modal"]')) {
-        event.preventDefault();
-        openVerificationModal();
-    }
-    
-    // Close verification modal - MULTIPLE ways to ensure it works
-    else if (
-        event.target.matches('[data-action="close-verification-modal"]') ||
-        event.target.closest('[data-action="close-verification-modal"]') ||
-        event.target.id === 'verification-modal'
-    ) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const modal = document.getElementById('verification-modal');
-        if (modal) {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                if (document.body.contains(modal)) {
-                    document.body.removeChild(modal);
-                }
-            }, 200);
-        }
-    }
-    
-    // Make entire verification banner clickable (excluding buttons)
-    else if (event.target.closest('#verification-banner') && !event.target.matches('button')) {
-        event.preventDefault();
-        openVerificationModal();
-    }
-    
-    // Handle resend verification from modal
-    else if (event.target.matches('[data-action="resend-verification"]')) {
-        event.preventDefault();
-        resendVerification();
-    }
-});
+// (Removed duplicate verification modal listeners)
 
 console.log('MantraAQ main.js loaded successfully');
 
