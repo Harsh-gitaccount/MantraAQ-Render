@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./cart.html", 
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./js/**/*.js",
     "./**/*.html"
   ],
   theme: {

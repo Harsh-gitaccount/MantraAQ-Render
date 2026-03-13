@@ -876,6 +876,7 @@ async function refreshUser() {
     try {
         const res = await api("/auth/me", "GET");
         currentUser = res.user;
+        localStorage.setItem('user', JSON.stringify(currentUser)); // ✅ FIX: Cache the verified status
         updateAuthUI(currentUser); // Keep using your existing function
         console.log('✅ User data refreshed');
     } catch (error) {
