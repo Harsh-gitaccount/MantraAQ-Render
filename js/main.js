@@ -201,66 +201,84 @@ function handleMobileOrdersClick() {
     window.location.href = 'orders.html';
 }
 
-// ✅ ENHANCED: Professional Tailwind Profile Modal
+// ✅ CAPTIVATING: Professional UI Profile Modal with Guaranteed Z-Index
 function showUserProfile() {
     if (!currentUser) return;
 
     let profileModal = document.getElementById('profile-modal');
     
-    // Create the modal if it doesn't exist in the DOM
+    // Create the modal if it doesn't exist
     if (!profileModal) {
         profileModal = document.createElement('div');
         profileModal.id = 'profile-modal';
-        profileModal.className = 'fixed inset-0 z-[100] hidden items-center justify-center';
+        // Use inline z-index to guarantee it stays on top of any z-50 or z-[100] elements
+        profileModal.style.cssText = 'position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center;';
         
         // Inner HTML for the modal
         profileModal.innerHTML = `
             <!-- Backdrop -->
-            <div id="profile-modal-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0"></div>
+            <div id="profile-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300" style="opacity: 0;"></div>
             
-            <!-- Modal Content -->
-            <div id="profile-modal-content" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
-                <!-- Header -->
-                <div class="relative h-24 bg-gradient-to-r from-gray-800 to-gray-900">
-                    <button id="close-profile-btn" class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors bg-black/20 hover:bg-black/40 rounded-full p-1.5 backdrop-blur-md z-10">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                    <!-- Decorative patterns -->
-                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
+            <!-- Modal Content (Sleek Modern Design) -->
+            <div id="profile-modal-content" class="relative bg-white rounded-3xl shadow-2xl w-full max-w-[400px] mx-4 overflow-hidden transform transition-all duration-300" style="opacity: 0; transform: translateY(20px) scale(0.95);">
+                
+                <!-- Close Button -->
+                <button id="close-profile-btn" class="absolute top-4 right-4 text-white hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 backdrop-blur-md z-20 transition-all hover:scale-110">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+
+                <!-- Hero Header -->
+                <div class="relative h-32 bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
+                    <!-- Subtle pattern overlay -->
+                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
                 </div>
                 
                 <!-- Profile Info -->
-                <div class="px-8 pb-8 flex flex-col items-center">
-                    <!-- Avatar -->
-                    <div class="relative -mt-12 mb-4">
-                        <div class="w-24 h-24 bg-blue-600 rounded-full shadow-lg border-4 border-white flex items-center justify-center text-3xl font-bold text-white uppercase" id="profile-avatar-initial">
+                <div class="px-6 pb-8 pt-0 flex flex-col items-center relative z-10 bg-white">
+                    <!-- Avatar Floating -->
+                    <div class="relative -mt-16 mb-4 group cursor-default">
+                        <div class="w-28 h-28 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full shadow-lg border-4 border-white flex items-center justify-center text-4xl font-extrabold text-white transform transition duration-300 group-hover:scale-105" id="profile-avatar-initial">
                             U
                         </div>
-                        <div id="profile-verified-badge" class="absolute bottom-0 right-0 hidden bg-blue-500 text-white rounded-full p-1.5 border-2 border-white shadow-sm" title="Verified Account">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                        <!-- Verification Badge -->
+                        <div id="profile-verified-badge" class="absolute bottom-1 right-1 hidden bg-white rounded-full p-0.5 shadow-md">
+                            <div class="bg-blue-500 rounded-full p-1.5 text-white">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                            </div>
                         </div>
                     </div>
                     
-                    <h3 id="profile-modal-name" class="text-2xl font-bold text-gray-900 mb-1">User Name</h3>
-                    <p id="profile-modal-email" class="text-gray-500 mb-6 flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <!-- Names & Email -->
+                    <h3 id="profile-modal-name" class="text-2xl font-black text-gray-900 tracking-tight text-center">User Name</h3>
+                    <p id="profile-modal-email" class="text-gray-500 font-medium mt-1 mb-6 flex items-center justify-center gap-1.5 text-sm">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
                         user@example.com
                     </p>
                     
                     <!-- Details Card -->
-                    <div class="w-full bg-gray-50 rounded-xl p-5 mb-6 border border-gray-100 shadow-inner">
-                        <div class="flex flex-col gap-4">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium text-gray-500">Status</span>
-                                <span id="profile-modal-status" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-800">
-                                    Unverified
-                                </span>
+                    <div class="w-full bg-gray-50/80 rounded-2xl p-4 border border-gray-100 shadow-inner">
+                        <div class="flex items-center justify-between p-2">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-blue-100 p-2 rounded-xl text-blue-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <span class="font-semibold text-gray-700 text-sm">Account Status</span>
                             </div>
-                            <div class="h-px bg-gray-200 w-full"></div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium text-gray-500">Member Since</span>
-                                <span id="profile-modal-date" class="text-sm font-semibold text-gray-800">Date</span>
+                            <span id="profile-modal-status" class="px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                Status
+                            </span>
+                        </div>
+                        
+                        <div class="h-px bg-gray-200/60 w-full my-1"></div>
+                        
+                        <div class="flex items-center justify-between p-2">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <span class="font-semibold text-gray-700 text-sm">Member Since</span>
                             </div>
+                            <span id="profile-modal-date" class="text-sm font-bold text-gray-900">Date</span>
                         </div>
                     </div>
                 </div>
@@ -273,14 +291,12 @@ function showUserProfile() {
             const backdrop = document.getElementById('profile-modal-backdrop');
             const content = document.getElementById('profile-modal-content');
             
-            backdrop.classList.remove('opacity-100');
-            backdrop.classList.add('opacity-0');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
+            backdrop.style.opacity = '0';
+            content.style.opacity = '0';
+            content.style.transform = 'translateY(20px) scale(0.95)';
             
             setTimeout(() => {
-                profileModal.classList.remove('flex');
-                profileModal.classList.add('hidden');
+                profileModal.style.display = 'none';
             }, 300);
         };
         
@@ -303,27 +319,26 @@ function showUserProfile() {
     const verifiedBadge = document.getElementById('profile-verified-badge');
     
     if (currentUser.email_verified) {
-        statusBadge.textContent = 'Verified Member';
-        statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200';
+        statusBadge.textContent = 'Verified';
+        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-green-100 text-green-700 border border-green-200';
         verifiedBadge.classList.remove('hidden');
     } else {
         statusBadge.textContent = 'Unverified';
-        statusBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-800 border border-gray-300';
+        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gray-100 text-gray-600 border border-gray-200';
         verifiedBadge.classList.add('hidden');
     }
 
     // Show modal with animation
-    profileModal.classList.remove('hidden');
-    profileModal.classList.add('flex');
+    profileModal.style.display = 'flex';
     
-    // Trigger reflow for animations
+    // Trigger reflow
     void profileModal.offsetWidth;
     
-    document.getElementById('profile-modal-backdrop').classList.remove('opacity-0');
-    document.getElementById('profile-modal-backdrop').classList.add('opacity-100');
+    document.getElementById('profile-modal-backdrop').style.opacity = '1';
     
-    document.getElementById('profile-modal-content').classList.remove('scale-95', 'opacity-0');
-    document.getElementById('profile-modal-content').classList.add('scale-100', 'opacity-100');
+    const content = document.getElementById('profile-modal-content');
+    content.style.opacity = '1';
+    content.style.transform = 'translateY(0) scale(1)';
 }
 
 // ✅ KEEP: Your updateUserDisplay function is perfect as-is
