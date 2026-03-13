@@ -160,12 +160,25 @@ router.get("/verify-email", async (req, res) => {
     await db.execute("UPDATE users SET email_verified = TRUE WHERE id = ?", [row.user_id]);
     await db.execute("UPDATE email_verifications SET used = TRUE WHERE token = ?", [token]);
     
+    // Clear any existing session (log them out of the wrong account if they had one)
+    const existingSid = req.cookies?.sid;
+    if (existingSid) {
+      await db.execute("DELETE FROM sessions WHERE id = ?", [existingSid]);
+    }
+
+    // Force login to the verified account
+    const sid = uuidv4();
+    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+    await db.execute("INSERT INTO sessions (id, user_id, expires_at) VALUES (?,?,?)", [sid, row.user_id, expires]);
+    setSessionCookie(res, sid);
+    
     // Redirect to success page instead of JSON
     res.redirect("/?verified=true");
     
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Verification failed. Please try again." });
+    console.error("Verification error:", e);
+    // Redirect to the homepage with a generic error query instead of showing raw JSON
+    res.redirect("/?verification_failed=true");
   }
 });
 

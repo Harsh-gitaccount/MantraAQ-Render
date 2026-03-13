@@ -1983,6 +1983,9 @@ if (currentUser) {
         }
         
         window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('verification_failed') === 'true') {
+        showToast("Verification link is invalid or has expired. Please request a new one.", "error");
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
     
     // Handle password reset from URL
