@@ -771,6 +771,15 @@ async function initShippingPage() {
         } else {
             showToast('🚚 Enter your delivery address below', 'info');
         }
+
+        // ✅ NEW: Force verification banner to reappear during checkout
+        sessionStorage.removeItem('verification_dismissed');
+        if (currentUser && !currentUser.email_verified) {
+            // Give main.js time to load and inject it, or call it directly if available
+            if (typeof showVerificationStatus === 'function') {
+                showVerificationStatus(false);
+            }
+        }
         
         console.log('✅ Shipping page initialized successfully');
         

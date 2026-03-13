@@ -39,6 +39,14 @@
             setupPaymentMethodSelection();
             setupOrderPlacement();
             
+            // ✅ NEW: Force verification banner to reappear on payment page
+            sessionStorage.removeItem('verification_dismissed');
+            if (currentUser && !currentUser.email_verified) {
+                if (typeof showVerificationStatus === 'function') {
+                    showVerificationStatus(false);
+                }
+            }
+
             console.log('✅ Payment page initialized successfully');
             
         } catch (error) {

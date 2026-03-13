@@ -249,6 +249,16 @@ function updateUserDisplay() {
         if (mobileUserInitial) mobileUserInitial.textContent = initial;
         if (mobileUserName) mobileUserName.textContent = currentUser.name;
         if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
+
+        // Handle verify menu item visibility
+        const verifyMenuItem = $('verify-menu-item');
+        if (verifyMenuItem) {
+            if (currentUser.email_verified) {
+                verifyMenuItem.classList.add('hidden');
+            } else {
+                verifyMenuItem.classList.remove('hidden');
+            }
+        }
         
         // Show user menu, hide auth buttons
         const userMenu = $('user-menu');
